@@ -7,11 +7,15 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Docker Build') {
-      steps { sh "docker build -t ${IMAGE} ." }
+      steps {
+        sh "docker build -t ${IMAGE} ."
+      }
     }
 
     stage('Install Trivy') {
@@ -19,7 +23,7 @@ pipeline {
         sh '''
           if ! command -v trivy &> /dev/null; then
             echo "📦 Installing Trivy..."
-           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.64.0-17-g482d38397
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
           else
             echo "✅ Trivy already installed."
           fi
@@ -37,11 +41,11 @@ pipeline {
       steps {
         withCredentials([usernamePassword(
           credentialsId: 'docker-hub-creds',
-          usernameVariable: 'cloudansh',
-          passwordVariable: 'dckr_pat_ETOZthSkkpxzZZ8YL6bgC9JcoZo'
+          usernameVariable: 'DOCKER_USERNAME',
+          passwordVariable: 'DOCKER_PASSWORD'
         )]) {
           sh """
-            echo \$dckr_pat_ETOZthSkkpxzZZ8YL6bgC9JcoZo | docker login -u \$cloudansh --password-stdin
+            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
             docker push ${IMAGE}
           """
         }
