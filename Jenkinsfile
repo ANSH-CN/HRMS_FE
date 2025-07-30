@@ -2,20 +2,34 @@ pipeline {
   agent any
 
   environment {
-    APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
   }
 
   stages {
-    stage('Checkout Code') {
-      steps {
-        checkout scm
-      }
+    stage('Checkout') {
+      steps { checkout scm }
     }
 
     stage('Docker Build') {
+      steps { sh "docker build -t ${IMAGE} ." }
+    }
+
+    stage('Install Trivy') {
       steps {
-        sh "docker build -t ${IMAGE} ."
+        sh '''
+          if ! command -v trivy &> /dev/null; then
+            echo "📦 Installing Trivy..."
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          else
+            echo "✅ Trivy already installed."
+          fi
+        '''
+      }
+    }
+
+    stage('Trivy Scan') {
+      steps {
+        sh "trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${IMAGE}"
       }
     }
 
@@ -27,10 +41,7 @@ pipeline {
           passwordVariable: 'DOCKER_PASS'
         )]) {
           sh """
-            echo "🔐 Logging in to Docker Hub..."
             echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-
-            echo "📤 Pushing image to Docker Hub: ${IMAGE}"
             docker push ${IMAGE}
           """
         }
@@ -39,11 +50,8 @@ pipeline {
   }
 
   post {
-    success {
-      echo "✅ Docker image pushed successfully: ${IMAGE}"
-    }
     failure {
-      echo "❌ Pipeline failed. Check Jenkins console output for details."
+      echo "❌ Pipeline failed. Check console output."
     }
   }
 }
