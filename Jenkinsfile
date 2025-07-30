@@ -19,15 +19,21 @@ pipeline {
       }
     }
 
-    stage('Trivy Scan') {
+   stage('Trivy Scan') {
   steps {
     sh '''
-      echo "🔍 Installing Trivy locally (non-root)..."
-      mkdir -p ./bin
-      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
+      # Define local bin path
+      export TRIVY_DIR=trivy-bin
+      mkdir -p $TRIVY_DIR
 
-      echo "🔬 Running Trivy scan on image: ${IMAGE}"
-      ./bin/trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE} || true
+      # Download Trivy if not present
+      if [ ! -f "$TRIVY_DIR/trivy" ]; then
+        echo "📥 Installing Trivy locally..."
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $TRIVY_DIR
+      fi
+
+      # Run Trivy from local bin directory
+      $TRIVY_DIR/trivy image --severity HIGH,CRITICAL ${IMAGE} || true
     '''
   }
 }
