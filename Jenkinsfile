@@ -31,9 +31,13 @@ pipeline {
       }
     }
 
-    stage('Docker Push') {
+    stage('Docker Login & Push') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+        withCredentials([usernamePassword(
+          credentialsId: 'docker-hub-creds',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
           sh '''
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             docker push ${IMAGE}
@@ -45,10 +49,10 @@ pipeline {
 
   post {
     success {
-      echo "✅ Build and push completed successfully: ${IMAGE}"
+      echo "✅ Docker image pushed: ${IMAGE}"
     }
     failure {
-      echo "❌ Build or push failed. Please check the logs."
+      echo "❌ Pipeline failed. Check console output."
     }
   }
 }
