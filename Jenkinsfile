@@ -20,19 +20,18 @@ pipeline {
     }
 
     stage('Trivy Scan') {
-      steps {
-        sh '''
-          echo "🔍 Checking for Trivy..."
-          if ! command -v trivy > /dev/null; then
-            echo "📥 Installing Trivy..."
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          fi
+  steps {
+    sh '''
+      echo "🔍 Installing Trivy locally (non-root)..."
+      mkdir -p ./bin
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
 
-          echo "🔬 Running Trivy scan on image: ${IMAGE}"
-          trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE} || true
-        '''
-      }
-    }
+      echo "🔬 Running Trivy scan on image: ${IMAGE}"
+      ./bin/trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE} || true
+    '''
+  }
+}
+
 
     stage('Docker Login & Push') {
       steps {
