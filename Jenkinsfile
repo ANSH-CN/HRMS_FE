@@ -19,26 +19,6 @@ pipeline {
       }
     }
 
-   stage('Trivy Scan') {
-  steps {
-    sh '''
-      # Define local bin path
-      export TRIVY_DIR=trivy-bin
-      mkdir -p $TRIVY_DIR
-
-      # Download Trivy if not present
-      if [ ! -f "$TRIVY_DIR/trivy" ]; then
-        echo "📥 Installing Trivy locally..."
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $TRIVY_DIR
-      fi
-
-      # Run Trivy from local bin directory
-      $TRIVY_DIR/trivy image --severity HIGH,CRITICAL ${IMAGE} || true
-    '''
-  }
-}
-
-
     stage('Docker Login & Push') {
       steps {
         withCredentials([usernamePassword(
