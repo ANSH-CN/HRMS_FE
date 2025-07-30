@@ -28,11 +28,11 @@ pipeline {
       steps {
         withCredentials([usernamePassword(
           credentialsId: 'docker-hub-creds',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
+          usernameVariable: 'cloudansh',
+          passwordVariable: 'dckr_pat_lwqdE6NsPuMBTfnKkVAaoLlZRcM'
         )]) {
           sh """
-            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+            echo \dckr_pat_lwqdE6NsPuMBTfnKkVAaoLlZRcM | docker login -u \cloudansh --password-stdin
             docker push ${IMAGE}
           """
         }
