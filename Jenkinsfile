@@ -3,6 +3,7 @@ pipeline {
 
   environment {
     APP = "hrms-frontend"
+    IMAGE = "cloudansh/hrms-frontend"
   }
 
   stages {
@@ -12,33 +13,20 @@ pipeline {
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Docker Build') {
       steps {
-        sh 'docker build -t ${APP}:latest .'
+        sh 'docker build -t cloudansh/hrms-frontend:latest .'
+        sh 'docker tag new:latest'
       }
     }
 
-    stage('Trivy Scan') {
+    stage('Push to Docker Hub') {
       steps {
-        sh """
-          trivy image --severity LOW,MEDIUM,HIGH --exit-code 0 --format json \
-            -o trivy-${APP}.json ${APP}:latest
-          trivy image --severity CRITICAL --exit-code 1 --format json \
-            -o trivy-${APP}-crit.json ${APP}:latest
-          trivy convert --format template \
-            --template "@/usr/local/share/trivy/templates/html.tpl" \
-            --output trivy-${APP}.html trivy-${APP}.json
-        """
-      }
-      post {
-        always {
-          publishHTML(target: [
-            allowMissing: true,
-            alwaysLinkToLastBuild: true,
-            reportDir: '.',
-            reportFiles: "trivy-${APP}.html",
-            reportName: "Trivy Report - ${APP}"
-          ])
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push  cloudansh/hrms-frontend:latest
+          '''
         }
       }
     }
@@ -51,9 +39,10 @@ pipeline {
         ]) {
           sh """
             ssh -o StrictHostKeyChecking=no -i $KEY $SSH_USER@$REMOTE '
+              docker pull  cloudansh/hrms-frontend:latest
               docker stop ${APP} || true
               docker rm ${APP} || true
-              docker run -d --name ${APP} -p 80:80 ${APP}:latest
+              docker run -d  -p 80:80  cloudansh/hrms-frontend:latest
             '
           """
         }
