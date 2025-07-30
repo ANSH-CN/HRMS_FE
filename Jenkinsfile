@@ -15,7 +15,7 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        sh 'docker build -t ${IMAGE} .'
+        sh "docker build -t ${IMAGE} ."
       }
     }
 
@@ -26,13 +26,13 @@ pipeline {
           usernameVariable: 'DOCKER_USER',
           passwordVariable: 'DOCKER_PASS'
         )]) {
-          sh '''
+          sh """
             echo "🔐 Logging in to Docker Hub..."
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
 
             echo "📤 Pushing image to Docker Hub: ${IMAGE}"
             docker push ${IMAGE}
-          '''
+          """
         }
       }
     }
