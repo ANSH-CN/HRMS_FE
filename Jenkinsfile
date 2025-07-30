@@ -19,7 +19,7 @@ pipeline {
         sh '''
           if ! command -v trivy &> /dev/null; then
             echo "📦 Installing Trivy..."
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.64.0-17-g482d38397
           else
             echo "✅ Trivy already installed."
           fi
