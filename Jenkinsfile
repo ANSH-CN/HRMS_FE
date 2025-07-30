@@ -3,11 +3,11 @@ pipeline {
 
   environment {
     APP = "hrms-frontend"
-    IMAGE = "cloudansh/hrms-frontend"
+    IMAGE = "cloudansh/hrms-frontend:latest"
   }
 
   stages {
-    stage('Checkout') {
+    stage('Checkout Code') {
       steps {
         checkout scm
       }
@@ -15,38 +15,40 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        sh 'docker build -t cloudansh/hrms-frontend:latest .'
-        sh 'docker tag new:latest'
+        sh 'docker build -t ${IMAGE} .'
       }
     }
 
-    stage('Push to Docker Hub') {
+    stage('Trivy Scan') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+        sh '''
+          if ! command -v trivy &> /dev/null; then
+            echo "Installing Trivy..."
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          fi
+          trivy image --severity HIGH,CRITICAL ${IMAGE} || true
+        '''
+      }
+    }
+
+    stage('Docker Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh '''
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push  cloudansh/hrms-frontend:latest
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push ${IMAGE}
           '''
         }
       }
     }
+  }
 
-    stage('Deploy to EC2') {
-      steps {
-        withCredentials([
-          sshUserPrivateKey(credentialsId: 'frontend-ssh', keyFileVariable: 'KEY', usernameVariable: 'SSH_USER'),
-          string(credentialsId: 'frontend-ec2-ip', variable: 'REMOTE')
-        ]) {
-          sh """
-            ssh -o StrictHostKeyChecking=no -i $KEY $SSH_USER@$REMOTE '
-              docker pull  cloudansh/hrms-frontend:latest
-              docker stop ${APP} || true
-              docker rm ${APP} || true
-              docker run -d  -p 80:80  cloudansh/hrms-frontend:latest
-            '
-          """
-        }
-      }
+  post {
+    success {
+      echo "✅ Build and push completed successfully: ${IMAGE}"
+    }
+    failure {
+      echo "❌ Build or push failed. Please check the logs."
     }
   }
 }
