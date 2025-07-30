@@ -18,19 +18,6 @@ pipeline {
       }
     }
 
-    stage('Install Trivy') {
-      steps {
-        sh '''
-          if ! command -v trivy &> /dev/null; then
-            echo "📦 Installing Trivy..."
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-          else
-            echo "✅ Trivy already installed."
-          fi
-        '''
-      }
-    }
-
     stage('Trivy Scan') {
       steps {
         sh "trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${IMAGE}"
