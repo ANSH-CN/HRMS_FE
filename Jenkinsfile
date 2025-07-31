@@ -61,7 +61,7 @@ pipeline {
       steps {
         echo 'Check Dependency Check tests...'
         dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'dc'
-        dependencyCheckPublisher pattern: '**/dependency-check-report.json'
+      
       }
     }
      // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
