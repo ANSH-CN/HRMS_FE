@@ -25,22 +25,25 @@ pipeline {
       }
     }
 
-    stage('Trivy Scan') {
-      steps {
-        sh '''
-          mkdir -p trivy-reports contrib
+   stage('Trivy Scan') {
+  steps {
+    sh '''
+      mkdir -p trivy-reports contrib
 
-          # Download HTML report template if not exists
-          curl -sSL -o contrib/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+      # Download the HTML template if not present
+      if [ ! -f contrib/html.tpl ]; then
+        curl -sSL -o contrib/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+      fi
 
-          # Generate JSON report
-          trivy image --severity CRITICAL,HIGH --format json -o trivy-reports/trivy-report.json ${IMAGE}
+      # Generate JSON report
+      trivy image --severity CRITICAL,HIGH --format json -o trivy-reports/trivy-report.json ${IMAGE}
 
-          # Generate HTML report
-          trivy image --severity CRITICAL,HIGH --format template --template "@contrib/html.tpl" -o trivy-reports/trivy-report.html ${IMAGE}
-        '''
-      }
-    }
+      # Generate HTML report
+      trivy image --severity CRITICAL,HIGH --format template --template "@contrib/html.tpl" -o trivy-reports/trivy-report.html ${IMAGE}
+    '''
+  }
+}
+
 
     stage('Docker Login & Push') {
       steps {
