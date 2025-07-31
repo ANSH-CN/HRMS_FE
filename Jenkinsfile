@@ -4,6 +4,7 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
+    SONARQUBE_ENV = "SonarEC2"   // Use the name you gave in Jenkins "SonarQube servers"
   }
 
   stages {
@@ -13,15 +14,23 @@ pipeline {
       }
     }
 
-    stage('Docker Compose Build') {
+    stage('SonarQube Analysis') {
       steps {
-        sh 'docker-compose build'
+        withSonarQubeEnv("${SONARQUBE_ENV}") {
+          sh 'sonar-scanner'
+        }
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        sh 'docker build -t ${IMAGE} .'
       }
     }
 
     stage('Trivy Scan') {
       steps {
-        sh "trivy image --severity CRITICAL,HIGH ${IMAGE} || true"
+        sh 'trivy image --severity CRITICAL,HIGH ${IMAGE} || true'
       }
     }
 
@@ -34,23 +43,10 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker-compose push
+            docker push ${IMAGE}
           '''
         }
       }
-    }
-
-    stage('Deploy Using Compose') {
-      steps {
-        sh 'docker-compose down || true'
-        sh 'docker-compose up -d'
-      }
-    }
-  }
-
-  post {
-    failure {
-      echo "❌ Pipeline failed. Check console output."
     }
   }
 }
