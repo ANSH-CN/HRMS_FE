@@ -13,9 +13,9 @@ pipeline {
       }
     }
 
-    stage('Docker Compose Build') {
+    stage('Docker Build') {
       steps {
-        sh 'docker-compose build'
+        sh 'docker build -t ${IMAGE} .'
       }
     }
 
@@ -34,16 +34,16 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker-compose push
+            docker push ${IMAGE}
           '''
         }
       }
     }
 
-    stage('Deploy Using Compose') {
+    stage('Docker Run') {
       steps {
-        sh 'docker-compose down || true'
-        sh 'docker-compose up -d'
+        sh 'docker stop ${APP} || true && docker rm ${APP} || true'
+        sh 'docker run -d --name ${APP} -p 3000:80 ${IMAGE}'
       }
     }
   }
