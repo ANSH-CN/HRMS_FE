@@ -2,13 +2,8 @@ pipeline {
   agent any
 
   environment {
+    APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_SERVER = "Sonar" // This should match Jenkins global SonarQube server name
-    SONAR_HOST = "http://54.172.153.126:9000"
-  }
-
-  tools {
-    sonarQubeScanner 'Sonar' // This should match your SonarQube scanner tool name in Jenkins Global Tools
   }
 
   stages {
@@ -18,23 +13,16 @@ pipeline {
       }
     }
 
-    stage('Docker Build') {
+    stage('Verify Docker Compose') {
       steps {
-        sh 'docker build -t ${IMAGE} .'
+        sh 'docker-compose version || docker compose version || echo "❌ Docker Compose not found"'
       }
     }
 
-    stage('SonarQube Analysis') {
+    stage('Docker Compose Build') {
       steps {
-        withSonarQubeEnv("${SONARQUBE_SERVER}") {
-          sh '''
-            sonar-scanner \
-              -Dsonar.projectKey=hrmsfrontend \
-              -Dsonar.projectName=hrmsfrontend \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=${SONAR_HOST}
-          '''
-        }
+        sh 'docker-compose build'
+        // or use: sh 'docker compose build'
       }
     }
 
@@ -53,19 +41,18 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker push ${IMAGE}
+            docker-compose push
+            # or: docker compose push
           '''
         }
       }
     }
 
-    stage('Docker Run') {
+    stage('Deploy Using Compose') {
       steps {
-        sh '''
-          docker stop hrms-frontend || true
-          docker rm hrms-frontend || true
-          docker run -d --name hrms-frontend -p 3000:80 ${IMAGE}
-        '''
+        sh 'docker-compose down || true'
+        sh 'docker-compose up -d'
+        // or: docker compose down/up
       }
     }
   }
