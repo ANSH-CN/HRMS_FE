@@ -1,10 +1,14 @@
 pipeline {
   agent any
 
+  tools {
+    sonarQubeScanner 'SonarScanner'  // 👈 Name configured in Jenkins > Global Tools
+  }
+
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_ENV = "SonarEC2"  // Update this if your configured name is different
+    SONARQUBE_TOKEN = credentials('sonar-token')  // 👈 Jenkins credential ID for Sonar token
   }
 
   stages {
@@ -14,17 +18,19 @@ pipeline {
       }
     }
 
-  stage('SonarQube Scan') {
-  steps {
-    withSonarQubeEnv("${SONARQUBE_ENV}") {
-      sh '''
-        export PATH=$PATH:/opt/sonar-scanner/bin
-        sonar-scanner
-      '''
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('SonarQube') {  // 👈 Name configured in Jenkins > Configure System
+          sh '''
+            sonar-scanner \
+              -Dsonar.projectKey=hrms-frontend \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=$SONARQUBE_TOKEN
+          '''
+        }
+      }
     }
-  }
-}
-
 
     stage('Docker Compose Build') {
       steps {
@@ -63,7 +69,10 @@ pipeline {
 
   post {
     failure {
-      echo "❌ Pipeline failed. Check console output."
+      echo "❌ Pipeline failed. Check console output for errors."
+    }
+    success {
+      echo "✅ Pipeline executed successfully!"
     }
   }
 }
