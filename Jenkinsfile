@@ -57,12 +57,12 @@ pipeline {
         }
       }
     }
-    stage('Owasp Dependency Check') {
-      steps {
-        echo 'Check Dependency Check tests...'
-        dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'dc'
-      
-      }
+    stage('OWASP Dependency Check') {
+  steps {
+    dependencyCheck additionalArguments: '--scan ./ --format JSON --out .', odcInstallation: 'dc'
+  }
+}
+
     }
      // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
   }
