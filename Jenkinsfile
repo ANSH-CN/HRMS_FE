@@ -20,22 +20,23 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
+       stage('SonarQube Analysis') {
       steps {
         script {
-          // Perform SonarQube analysis
           sh """
             docker run --rm \
-              -e SONAR_HOST_URL={SONARQUBE_SERVER} \
-              -v $(pwd):/usr/src \
+              -e SONAR_HOST_URL=${SONARQUBE_SERVER} \
+              -v \$(pwd):/usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=${APP} \
               -Dsonar.sources=./src \
-              -Dsonar.host.url=http://http://54.172.153.126:9000 // Replace with your SonarQube instance URL
+              -Dsonar.host.url=http://:9000 \
+              -Dsonar.login=your-sonarqube-token
           """
         }
       }
     }
+
 
     stage('Trivy Scan') {
       steps {
