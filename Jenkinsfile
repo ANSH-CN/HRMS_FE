@@ -4,7 +4,7 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_SERVER = "sonarqube-token"  // Change this to the name of your SonarQube server configured in Jenkins
+    SONARQUBE_SERVER = "SonarEC2"  // Change this to the name of your SonarQube server configured in Jenkins
   }
 
   stages {
