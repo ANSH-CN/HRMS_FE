@@ -2,9 +2,9 @@ pipeline {
   agent any
 
   environment {
-    APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
     SONARQUBE_SERVER = "SonarEC2"  // Change this to the name of your SonarQube server configured in Jenkins
+    key = "sqp_f929da7f64a4205fb15b321e2138e499af8b665d"
   }
 
   stages {
@@ -28,7 +28,7 @@ pipeline {
               -e SONAR_HOST_URL=${SONARQUBE_SERVER} \
               -v \$(pwd):/usr/src \
               sonarsource/sonar-scanner-cli \
-              -Dsonar.projectKey=${APP} \
+              -Dsonar.projectKey=${Key} \
               -Dsonar.sources=./src \
               -Dsonar.host.url=http://:9000 \
               -Dsonar.login=your-sonarqube-token
