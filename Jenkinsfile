@@ -4,6 +4,7 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
+    SONAR_HOME = tool "Sonar"
   }
 
   stages {
@@ -48,7 +49,16 @@ pipeline {
       }
     }
 
-    // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
+ 
+    stage('Sonar Qube Analysis') {
+      steps {
+        withSonarQubeEnv("Sonar"){
+            sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=hrms -Dsonar.projectKey=hrms"
+        }
+      }
+    }
+      
+     // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
   }
 
   post {
