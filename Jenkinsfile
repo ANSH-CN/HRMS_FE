@@ -1,11 +1,13 @@
-agent any
+pipeline {
+  agent any
 
   environment {
+    APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_SERVER = "SonarEC2"  // Change this to the name of your SonarQube server configured in Jenkins
-    //key = "sqp_f929da7f64a4205fb15b321e2138e499af8b665d"
-    SONAR_HOME = tool = "Sonar"
-    SONAR_HOST = "http://54.172.153.126:9000" 
+  }
+
+  tools {
+    sonarScanner 'Sonar' // Jenkins tool name (Manage Jenkins > Global Tool Config)
   }
 
   stages {
@@ -21,18 +23,13 @@ agent any
       }
     }
 
-      node {
-  stage('SCM') {
-    checkout scm
-  }
-  stage('SonarQube Analysis') {
+    stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv("Sonar"){
-          sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=hrmsfrontend -Dsonar.projectKey=hrmsfrontend"
+        withSonarQubeEnv('SonarEC2') {
+          sh 'sonar-scanner -Dsonar.projectKey=hrmsfrontend -Dsonar.projectName=hrmsfrontend -Dsonar.sources=./src'
+        }
       }
-  }
-}
-
+    }
 
     stage('Trivy Scan') {
       steps {
