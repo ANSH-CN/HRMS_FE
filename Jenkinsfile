@@ -4,7 +4,8 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_SERVER = "SonarEC2" // Jenkins global SonarQube server name
+    SONARQUBE_SERVER = "SonarEC2"
+    SONAR_HOME = tool "Sonar" // Jenkins global SonarQube server name
   }
 
   tools {
@@ -26,8 +27,8 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv("${SONARQUBE_SERVER}") {
-          sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=hrms-frontend -Dsonar.projectName=hrms-frontend'
+        withSonarQubeEnv("Sonar") {
+          sh '$Sonar_HOME/bin/sonar-scanner -Dsonar.projectKey=hrmsfrontend -Dsonar.projectName=hrmsfrontend'
         }
       }
     }
