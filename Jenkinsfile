@@ -55,24 +55,17 @@ pipeline {
   }
 }
 stage('OWASP Dependency Check') {
-  steps {
-    sh '''
-      echo "📦 Downloading OWASP Dependency-Check"
-      curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
-      unzip dependency-check.zip -d ./dependency-check
+  sh '''
+    echo "📦 Downloading OWASP Dependency-Check"
+    curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
+    unzip dependency-check.zip -d ./dependency-check
 
-      echo "🔍 Running OWASP scan on backend..."
-      ./dependency-check/dependency-check/bin/dependency-check.sh \
-        --project hrms-backend \
-        --scan . \
-        --format HTML \
-        --out owasp-report
-    '''
-  }
+    echo "🔍 Running OWASP scan on backend..."
+    ./dependency-check/dependency-check/bin/dependency-check.sh \
+      --project hrms-backend \
+      --scan . \
+      --format HTML \
+      --out owasp-report
+  '''
 }
 
-stage('Archive OWASP Report') {
-  steps {
-    archiveArtifacts artifacts: 'owasp-report/dependency-check-report.html', fingerprint: true
-  }
-}
