@@ -17,20 +17,19 @@ pipeline {
     stage('Trivy Filesystem Scan') {
       steps {
         sh '''
-          echo "🔍 Running Trivy FS scan..."
-          mkdir -p trivy-fs-reports
+          echo "🔍 Running Trivy Filesystem Scan..."
+          mkdir -p trivy-fs-reports contrib
 
-          # Optional: check Trivy version
           docker run --rm aquasec/trivy --version
 
-          # Plain text report
+          # JSON report
           docker run --rm -v $(pwd):/project aquasec/trivy fs \
             --severity HIGH,CRITICAL \
-            --format table \
-            /project > trivy-fs-reports/trivy-fs-report.json || true
+            --format json \
+            --output /project/trivy-fs-reports/trivy-fs-report.json \
+            /project || true
 
-          # Optional: HTML report using Trivy template
-          mkdir -p contrib
+          # HTML report
           curl -sSL -o contrib/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
 
           docker run --rm -v $(pwd):/project -v $(pwd)/contrib:/contrib aquasec/trivy fs \
@@ -49,28 +48,41 @@ pipeline {
       }
     }
 
- 
-    stage('Sonar Qube Analysis') {
+    stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv("Sonar"){
-            sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=hrms -Dsonar.projectKey=hrms"
+        withSonarQubeEnv("Sonar") {
+          sh '''
+            echo "🔎 Starting SonarQube analysis..."
+            $SONAR_HOME/bin/sonar-scanner \
+              -Dsonar.projectName=hrms \
+              -Dsonar.projectKey=hrms \
+              -Dsonar.sources=. \
+              -Dsonar.language=js \
+              -Dsonar.sourceEncoding=UTF-8
+          '''
         }
       }
     }
-   stage('OWASP Dependency Check') {
-  steps {
-    echo '⚙️ Running OWASP Dependency Check...'
-    dependencyCheck additionalArguments: '--scan . --format JSON --out reports --project "hrms-project"', odcInstallation: 'dc'
-  }
-}
 
+    stage('OWASP Dependency Check') {
+      steps {
+        echo '⚙️ Running OWASP Dependency Check...'
+        sh 'mkdir -p reports'
+        dependencyCheck additionalArguments: '--scan . --format JSON --out reports --project "hrms-project"', odcInstallation: 'dc'
+      }
     }
-     // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
+
+    stage('📊 Publish OWASP Report') {
+      steps {
+        echo "📄 Publishing OWASP Dependency Check JSON Report..."
+        dependencyCheckPublisher pattern: '**/dependency-check-report.json'
+      }
+    }
   }
 
   post {
     always {
-      echo "📦 Archiving Trivy FS scan report..."
+      echo "📦 Archiving Reports..."
       archiveArtifacts artifacts: 'trivy-fs-reports/*', fingerprint: true
       archiveArtifacts artifacts: 'reports/dependency-check-report.json', fingerprint: true
     }
