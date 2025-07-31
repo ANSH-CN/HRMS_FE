@@ -5,6 +5,3 @@ services:
     image: cloudansh/hrms-frontend:latest
     ports:
       - "3000:80"
-    build:
-      context: .
-      dockerfile: Dockerfile
