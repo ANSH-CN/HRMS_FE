@@ -50,10 +50,7 @@ pipeline {
 
   post {
     failure {
-      echo "❌ Pipeline failed. Check console output for errors."
-    }
-    success {
-      echo "✅ Pipeline executed successfully!"
+      echo "❌ Pipeline failed. Check console output."
     }
   }
 }
