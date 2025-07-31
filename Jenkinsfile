@@ -27,12 +27,12 @@ pipeline {
     stage('Docker Login & Push') {
       steps {
         withCredentials([usernamePassword(
-          credentialsId: 'docker-hub-creds',
-          usernameVariable: 'cloudansh',
-          passwordVariable: 'dckr_pat_lwqdE6NsPuMBTfnKkVAaoLlZRcM'
+          credentialsId: 'docker-hub-creds',     // Make sure this ID exists in Jenkins credentials
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
         )]) {
           sh """
-            echo \dckr_pat_lwqdE6NsPuMBTfnKkVAaoLlZRcM | docker login -u \cloudansh --password-stdin
+            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
             docker push ${IMAGE}
           """
         }
