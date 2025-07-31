@@ -1,14 +1,10 @@
 pipeline {
   agent any
 
-  tools {
-    sonarQubeScanner 'SonarScanner'  // 👈 Name configured in Jenkins > Global Tools
-  }
-
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_TOKEN = credentials('sonar-token')  // 👈 Jenkins credential ID for Sonar token
+    SONARQUBE_TOKEN = credentials('sonarqube-token')  // correct ID
   }
 
   stages {
@@ -20,13 +16,12 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv('SonarQube') {  // 👈 Name configured in Jenkins > Configure System
+        withSonarQubeEnv('sonarqube-token') {  // Name in Jenkins > Configure System
           sh '''
             sonar-scanner \
               -Dsonar.projectKey=hrms-frontend \
               -Dsonar.sources=. \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=$SONARQUBE_TOKEN
+              -Dsonar.login=$sonarqube-token
           '''
         }
       }
