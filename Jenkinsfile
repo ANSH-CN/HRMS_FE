@@ -26,7 +26,7 @@ pipeline {
           docker run --rm -v $(pwd):/project aquasec/trivy fs \
             --severity HIGH,CRITICAL \
             --format table \
-            /project > trivy-fs-reports/trivy-fs-report.txt || true
+            /project > trivy-fs-reports/trivy-fs-report.json || true
 
           # Optional: HTML report using Trivy template
           mkdir -p contrib
