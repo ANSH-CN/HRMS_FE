@@ -4,6 +4,7 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
+    SONARQUBE_SERVER = "sonarqube-token"  // Change this to the name of your SonarQube server configured in Jenkins
   }
 
   stages {
@@ -16,6 +17,23 @@ pipeline {
     stage('Docker Build') {
       steps {
         sh 'docker build -t ${IMAGE} .'
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      steps {
+        script {
+          // Perform SonarQube analysis
+          sh """
+            docker run --rm \
+              -e SONAR_HOST_URL=${SONARQUBE_SERVER} \
+              -v $(pwd):/usr/src \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=${APP} \
+              -Dsonar.sources=./src \
+              -Dsonar.host.url=http://http://54.172.153.126:9000 // Replace with your SonarQube instance URL
+          """
+        }
       }
     }
 
@@ -54,18 +72,3 @@ pipeline {
     }
   }
 }
-stage('OWASP Dependency Check') {
-  sh '''
-    echo "📦 Downloading OWASP Dependency-Check"
-    curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
-    unzip dependency-check.zip -d ./dependency-check
-
-    echo "🔍 Running OWASP scan on backend..."
-    ./dependency-check/dependency-check/bin/dependency-check.sh \
-      --project hrms-backend \
-      --scan . \
-      --format HTML \
-      --out owasp-report
-  '''
-}
-
