@@ -14,21 +14,24 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        withSonarQubeEnv('SonarQube') {
-          sh '''
-            docker run --rm \
-              -v "$(pwd)":/usr/src \
-              sonarsource/sonar-scanner-cli:latest \
-              -Dsonar.projectKey=hrms-frontend \
-              -Dsonar.sources=/usr/src \
-              -Dsonar.host.url=$SONAR_HOST_URL \
-              -Dsonar.login=$SONARQUBE_TOKEN
-          '''
-        }
-      }
+  stage('SonarQube Analysis') {
+  steps {
+    withSonarQubeEnv('SonarQube') {
+      sh """
+        echo "Running SonarQube scan..."
+
+        docker run --rm \
+          -v "\$PWD":/usr/src \
+          sonarsource/sonar-scanner-cli:latest \
+          -Dsonar.projectKey=hrms-frontend \
+          -Dsonar.sources=/usr/src \
+          -Dsonar.host.url=\$SONAR_HOST_URL \
+          -Dsonar.login=${SONARQUBE_TOKEN}
+      """
     }
+  }
+}
+
 
     stage('Docker Compose Build') {
       steps {
