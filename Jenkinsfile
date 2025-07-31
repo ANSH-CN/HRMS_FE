@@ -57,9 +57,10 @@ pipeline {
         }
       }
     }
-    stage('OWASP Dependency Check') {
+   stage('OWASP Dependency Check') {
   steps {
-    dependencyCheck additionalArguments: '--scan ./ --format JSON --out .', odcInstallation: 'dc'
+    echo '⚙️ Running OWASP Dependency Check...'
+    dependencyCheck additionalArguments: '--scan . --format JSON --out reports --project "hrms-project"', odcInstallation: 'dc'
   }
 }
 
@@ -71,7 +72,7 @@ pipeline {
     always {
       echo "📦 Archiving Trivy FS scan report..."
       archiveArtifacts artifacts: 'trivy-fs-reports/*', fingerprint: true
-       archiveArtifacts artifacts: 'dependency-check-report.json', fingerprint: true
+      archiveArtifacts artifacts: 'reports/dependency-check-report.json', fingerprint: true
     }
 
     failure {
