@@ -61,7 +61,7 @@ pipeline {
       steps {
         echo 'Check Dependency Check tests...'
         dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'dc'
-        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        dependencyCheckPublisher pattern: '**/dependency-check-report.json'
       }
     }
      // Add more stages here (Trivy image scan, Docker push, Deploy, etc.)
@@ -71,6 +71,7 @@ pipeline {
     always {
       echo "📦 Archiving Trivy FS scan report..."
       archiveArtifacts artifacts: 'trivy-fs-reports/*', fingerprint: true
+       archiveArtifacts artifacts: 'dependency-check-report.json', fingerprint: true
     }
 
     failure {
