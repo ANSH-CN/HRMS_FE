@@ -27,10 +27,19 @@ pipeline {
     }
 
     stage('Trivy Scan') {
-      steps {
-        sh "trivy image --severity CRITICAL,HIGH ${IMAGE} || true"
-      }
-    }
+  steps {
+    sh '''
+      mkdir -p trivy-reports
+
+      # txt report
+      trivy image --severity CRITICAL,HIGH --format json -o trivy-reports/trivy-report.txt ${IMAGE}
+
+      # HTML report (optional)
+      trivy image --severity CRITICAL,HIGH --format template --template "@contrib/html.tpl" -o trivy-reports/trivy-report.html ${IMAGE}
+    '''
+  }
+}
+
 
     stage('Docker Login & Push') {
       steps {
