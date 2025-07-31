@@ -5,6 +5,7 @@ agent any
     SONARQUBE_SERVER = "SonarEC2"  // Change this to the name of your SonarQube server configured in Jenkins
     //key = "sqp_f929da7f64a4205fb15b321e2138e499af8b665d"
     SONAR_HOME = tool = "Sonar"
+    SONAR_HOST = "http://54.172.153.126:9000" 
   }
 
   stages {
