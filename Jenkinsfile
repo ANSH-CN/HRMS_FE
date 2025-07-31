@@ -4,7 +4,6 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_TOKEN = credentials('sonarqube-token') // Jenkins secret text token
   }
 
   stages {
@@ -13,25 +12,6 @@ pipeline {
         checkout scm
       }
     }
-
-  stage('SonarQube Analysis') {
-  steps {
-    withSonarQubeEnv('SonarQube') {
-      sh """
-        echo "Running SonarQube scan..."
-
-        docker run --rm \
-          -v "\$PWD":/usr/src \
-          sonarsource/sonar-scanner-cli:latest \
-          -Dsonar.projectKey=hrms-frontend \
-          -Dsonar.sources=/usr/src \
-          -Dsonar.host.url=\$SONAR_HOST_URL \
-          -Dsonar.login=${SONARQUBE_TOKEN}
-      """
-    }
-  }
-}
-
 
     stage('Docker Compose Build') {
       steps {
