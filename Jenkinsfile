@@ -4,7 +4,7 @@ pipeline {
   environment {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
-    SONARQUBE_ENV = "SonarEC2"  // Use the exact name configured in Jenkins > Manage Jenkins > Configure System
+    SONARQUBE_ENV = "SonarEC2"  // Update this if your configured name is different
   }
 
   stages {
@@ -17,7 +17,7 @@ pipeline {
     stage('SonarQube Scan') {
       steps {
         withSonarQubeEnv("${SONARQUBE_ENV}") {
-          sh 'sonar-scanner'
+          sh '/opt/sonar-scanner/bin/sonar-scanner'
         }
       }
     }
