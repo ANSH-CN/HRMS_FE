@@ -26,7 +26,7 @@ pipeline {
           // Perform SonarQube analysis
           sh """
             docker run --rm \
-              -e SONAR_HOST_URL=${SONARQUBE_SERVER} \
+              -e SONAR_HOST_URL={SONARQUBE_SERVER} \
               -v $(pwd):/usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=${APP} \
