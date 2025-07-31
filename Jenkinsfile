@@ -25,15 +25,13 @@ pipeline {
       }
     }
 
-   stage('Trivy Scan') {
+  stage('Trivy Scan') {
   steps {
     sh '''
       mkdir -p trivy-reports contrib
 
-      # Download the HTML template if not present
-      if [ ! -f contrib/html.tpl ]; then
-        curl -sSL -o contrib/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
-      fi
+      # Download the HTML template before using it
+      curl -sSL -o contrib/html.tpl https://github.com/aquasecurity/trivy.git
 
       # Generate JSON report
       trivy image --severity CRITICAL,HIGH --format json -o trivy-reports/trivy-report.json ${IMAGE}
