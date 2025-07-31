@@ -14,13 +14,17 @@ pipeline {
       }
     }
 
-    stage('SonarQube Scan') {
-      steps {
-        withSonarQubeEnv("${SONARQUBE_ENV}") {
-          sh '/opt/sonar-scanner/bin/sonar-scanner'
-        }
-      }
+  stage('SonarQube Scan') {
+  steps {
+    withSonarQubeEnv("${SONARQUBE_ENV}") {
+      sh '''
+        export PATH=$PATH:/opt/sonar-scanner/bin
+        sonar-scanner
+      '''
     }
+  }
+}
+
 
     stage('Docker Compose Build') {
       steps {
