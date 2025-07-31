@@ -1,16 +1,14 @@
 pipeline {
-  agent NewJenkinsAws
-
+  agent any
 
   environment {
     IMAGE = "cloudansh/hrms-frontend:latest"
+    SONARQUBE_SERVER = "Sonar" // This should match Jenkins global SonarQube server name
     SONAR_HOST = "http://54.172.153.126:9000"
-    APP = "hrms-frontend"
   }
 
   tools {
-    // Name must match tool configured in Jenkins > Global Tool Configuration
-    sonarScanner 'Sonar'  
+    sonarQubeScanner 'Sonar' // This should match your SonarQube scanner tool name in Jenkins Global Tools
   }
 
   stages {
@@ -28,7 +26,7 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv('Sonar') {
+        withSonarQubeEnv("${SONARQUBE_SERVER}") {
           sh '''
             sonar-scanner \
               -Dsonar.projectKey=hrmsfrontend \
@@ -64,9 +62,9 @@ pipeline {
     stage('Docker Run') {
       steps {
         sh '''
-          docker stop ${APP} || true
-          docker rm ${APP} || true
-          docker run -d --name ${APP} -p 3000:80 ${IMAGE}
+          docker stop hrms-frontend || true
+          docker rm hrms-frontend || true
+          docker run -d --name hrms-frontend -p 3000:80 ${IMAGE}
         '''
       }
     }
