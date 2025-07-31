@@ -13,9 +13,16 @@ pipeline {
       }
     }
 
-    stage('Verify Docker Compose') {
+    stage('Trivy Filesystem Scan') {
       steps {
-        sh 'docker-compose version || docker compose version || echo "❌ Docker Compose not found"'
+        sh '''
+          echo "🔍 Running Trivy FS scan..."
+          mkdir -p trivy-fs-reports
+          docker run --rm -v $(pwd):/project aquasec/trivy fs \
+            --severity HIGH,CRITICAL \
+            --format table \
+            /project > trivy-fs-reports/trivy-fs-report.txt || true
+        '''
       }
     }
 
@@ -25,58 +32,17 @@ pipeline {
       }
     }
 
-  stage('Trivy Scan') {
-  steps {
-    sh '''
-      mkdir -p trivy-reports contrib
-
-      # Download the HTML template before using it
-      curl -sSL -o contrib/html.tpl https://github.com/aquasecurity/trivy.git
-
-      # Generate JSON report
-      trivy image --severity CRITICAL,HIGH --format json -o trivy-reports/trivy-report.json ${IMAGE}
-
-      # Generate HTML report
-      trivy image --severity CRITICAL,HIGH --format template --template "@contrib/html.tpl" -o trivy-reports/trivy-report.html ${IMAGE}
-    '''
-  }
-}
-
-
-    stage('Docker Login & Push') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'docker-hub-creds',
-          usernameVariable: 'DOCKER_USERNAME',
-          passwordVariable: 'DOCKER_PASSWORD'
-        )]) {
-          sh '''
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker-compose push
-          '''
-        }
-      }
-    }
-
-    stage('Deploy Using Compose') {
-      steps {
-        sh '''
-          docker-compose down || true
-          docker-compose rm -f || true
-          docker-compose up -d
-        '''
-      }
-    }
+    // ... your other stages ...
   }
 
   post {
     always {
-      echo "📦 Archiving Trivy reports..."
-      archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
+      echo "📦 Archiving Trivy FS scan report..."
+      archiveArtifacts artifacts: 'trivy-fs-reports/*', fingerprint: true
     }
 
     failure {
-      echo "❌ Pipeline failed. Check console output."
+      echo "❌ Pipeline failed. Check logs."
     }
   }
 }
