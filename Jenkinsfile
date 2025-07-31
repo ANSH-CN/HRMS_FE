@@ -1,13 +1,16 @@
 pipeline {
-  agent any
+  agent NewJenkinsAws
+
 
   environment {
-    APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
+    SONAR_HOST = "http://54.172.153.126:9000"
+    APP = "hrms-frontend"
   }
 
   tools {
-    sonarScanner 'Sonar' // Jenkins tool name (Manage Jenkins > Global Tool Config)
+    // Name must match tool configured in Jenkins > Global Tool Configuration
+    sonarScanner 'Sonar'  
   }
 
   stages {
@@ -25,8 +28,14 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        withSonarQubeEnv('SonarEC2') {
-          sh 'sonar-scanner -Dsonar.projectKey=hrmsfrontend -Dsonar.projectName=hrmsfrontend -Dsonar.sources=./src'
+        withSonarQubeEnv('Sonar') {
+          sh '''
+            sonar-scanner \
+              -Dsonar.projectKey=hrmsfrontend \
+              -Dsonar.projectName=hrmsfrontend \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=${SONAR_HOST}
+          '''
         }
       }
     }
@@ -54,8 +63,11 @@ pipeline {
 
     stage('Docker Run') {
       steps {
-        sh 'docker stop ${APP} || true && docker rm ${APP} || true'
-        sh 'docker run -d --name ${APP} -p 3000:80 ${IMAGE}'
+        sh '''
+          docker stop ${APP} || true
+          docker rm ${APP} || true
+          docker run -d --name ${APP} -p 3000:80 ${IMAGE}
+        '''
       }
     }
   }
