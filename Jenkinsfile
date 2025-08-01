@@ -59,14 +59,4 @@ pipeline {
     }
   }
 
-  post {
-    always {
-      echo "📦 Archiving Reports..."
-      archiveArtifacts artifacts: 'trivy-fs-report.json', fingerprint: true
-    }
 
-    failure {
-      echo "❌ Pipeline failed. Check logs."
-    }
-  }
-}
