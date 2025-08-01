@@ -57,28 +57,12 @@ pipeline {
         }
       }
     }
-
-    stage('OWASP Dependency Check') {
-      steps {
-        echo '⚙️ Running OWASP Dependency Check...'
-        sh 'mkdir -p reports'
-        dependencyCheck additionalArguments: '--scan . --format JSON --out reports --project "hrms-project"', odcInstallation: 'dc'
-      }
-    }
-
-    stage('📊 Publish OWASP Report') {
-      steps {
-        echo "📄 Publishing OWASP Dependency Check JSON Report..."
-        dependencyCheckPublisher pattern: '**/dependency-check-report.json'
-      }
-    }
   }
 
   post {
     always {
       echo "📦 Archiving Reports..."
       archiveArtifacts artifacts: 'trivy-fs-report.json', fingerprint: true
-      archiveArtifacts artifacts: 'reports/dependency-check-report.json', fingerprint: true
     }
 
     failure {
