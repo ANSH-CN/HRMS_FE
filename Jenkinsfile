@@ -14,30 +14,24 @@ pipeline {
       }
     }
 
-    stage('Trivy Filesystem Scan') {
+    stage('Check Trivy Scan') {
       steps {
-        sh '''
-          echo "🔍 Running Trivy Filesystem Scan..."
-          mkdir -p trivy-fs-reports contrib
+        echo 'Check Trivy Scan To Generate Report...'
+        script {
+          sh '''
+            # install trivy into user directory if missing
+            mkdir -p "$HOME/.local/bin"
+            export PATH="$HOME/.local/bin:$PATH"
 
-          docker run --rm aquasec/trivy --version
+            if ! command -v trivy >/dev/null 2>&1; then
+              echo "Installing trivy into $HOME/.local/bin"
+              curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "$HOME/.local/bin"
+            fi
 
-          # JSON report
-          docker run --rm -v $(pwd):/project aquasec/trivy fs \
-            --severity HIGH,CRITICAL \
-            --format json \
-            --output /project/trivy-fs-reports/trivy-fs-report.json \
-            /project || true
-
-          # HTML report
-          curl -sSL -o contrib/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
-
-          docker run --rm -v $(pwd):/project -v $(pwd)/contrib:/contrib aquasec/trivy fs \
-            --severity HIGH,CRITICAL \
-            --format template \
-            --template "@/contrib/html.tpl" \
-            /project > trivy-fs-reports/trivy-fs-report.html || true
-        '''
+            # verify and run scan
+            trivy fs --format json -o trivy-fs-report.json .
+          '''
+        }
       }
     }
 
@@ -83,7 +77,7 @@ pipeline {
   post {
     always {
       echo "📦 Archiving Reports..."
-      archiveArtifacts artifacts: 'trivy-fs-reports/*', fingerprint: true
+      archiveArtifacts artifacts: 'trivy-fs-report.json', fingerprint: true
       archiveArtifacts artifacts: 'reports/dependency-check-report.json', fingerprint: true
     }
 
