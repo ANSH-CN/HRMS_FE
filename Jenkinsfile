@@ -29,7 +29,7 @@ pipeline {
             fi
 
             # verify and run scan
-            trivy fs --format json -o trivy-fs-report.json .
+            ~/.local/bin/trivy fs --format json -o trivy-fs-report.json .
           '''
         }
       }
@@ -45,18 +45,17 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv("Sonar") {
-          sh '''
-            echo "🔎 Starting SonarQube analysis..."
-            $SONAR_HOME/bin/sonar-scanner \
+          sh """
+            echo '🔎 Starting SonarQube analysis...'
+            ${SONAR_HOME}/bin/sonar-scanner \
               -Dsonar.projectName=hrms \
               -Dsonar.projectKey=hrms \
               -Dsonar.sources=. \
               -Dsonar.language=js \
               -Dsonar.sourceEncoding=UTF-8
-          '''
+          """
         }
       }
     }
   }
-
-
+}
