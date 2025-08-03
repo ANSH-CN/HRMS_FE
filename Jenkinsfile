@@ -53,6 +53,7 @@ pipeline {
               -Dsonar.sources=. \
               -Dsonar.language=js \
               -Dsonar.sourceEncoding=UTF-8
+              -Dsonar.host.url=http://34.238.84.140:9000'''
           """
         }
       }
