@@ -42,21 +42,5 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        withSonarQubeEnv("Sonar") {
-          sh """
-            echo '🔎 Starting SonarQube analysis...'
-            ${SONAR_HOME}/bin/sonar-scanner \
-              -Dsonar.projectName=hrms \
-              -Dsonar.projectKey=hrms \
-              -Dsonar.sources=. \
-              -Dsonar.language=js \
-              -Dsonar.sourceEncoding=UTF-8
-              -Dsonar.host.url=http://34.238.84.140:9000'''
-          """
-        }
-      }
-    }
-  }
+ 
 }
