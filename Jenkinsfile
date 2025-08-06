@@ -5,31 +5,32 @@ pipeline {
     APP = "hrms-frontend"
     IMAGE = "cloudansh/hrms-frontend:latest"
     SONAR_HOME = tool "Sonar"
+    PATH = "$HOME/.local/bin:$PATH"
   }
 
   stages {
+
     stage('Checkout Code') {
       steps {
         checkout scm
       }
     }
 
-    stage('Check Trivy Scan') {
+    stage('Trivy Scan') {
       steps {
-        echo 'Check Trivy Scan To Generate Report...'
+        echo '🔍 Running Trivy scan to generate report...'
         script {
           sh '''
-            # install trivy into user directory if missing
             mkdir -p "$HOME/.local/bin"
             export PATH="$HOME/.local/bin:$PATH"
 
             if ! command -v trivy >/dev/null 2>&1; then
-              echo "Installing trivy into $HOME/.local/bin"
+              echo "📦 Installing Trivy..."
               curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "$HOME/.local/bin"
             fi
 
-            # verify and run scan
-            ~/.local/bin/trivy fs --format json -o trivy-fs-report.json .
+            echo "✅ Running Trivy FS scan..."
+            "$HOME/.local/bin/trivy" fs --format json -o trivy-fs-report.json .
           '''
         }
       }
@@ -37,10 +38,22 @@ pipeline {
 
     stage('Docker Compose Build') {
       steps {
-        sh 'docker-compose version || docker compose version || echo "❌ Docker Compose not found"'
-        sh 'docker-compose build || docker compose build'
+        echo '🔧 Checking Docker Compose version...'
+        script {
+          sh '''
+            if docker-compose version >/dev/null 2>&1; then
+              echo "✅ Using docker-compose"
+              docker-compose build
+            elif docker compose version >/dev/null 2>&1; then
+              echo "✅ Using docker compose"
+              docker compose build
+            else
+              echo "❌ Docker Compose not found!"
+              exit 1
+            fi
+          '''
+        }
       }
     }
-
- 
+  }
 }
